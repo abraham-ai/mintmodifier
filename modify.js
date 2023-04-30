@@ -6,7 +6,7 @@ const fs = require("fs");
 const pinataSDK = require("@pinata/sdk");
 
 const livemintAbi = require("eden-contracts/out/EdenLivemint.sol/EdenLivemint.json");
-const broadcast = require("eden-contracts/broadcast/Deploy.s.sol/5/run-latest.json");
+const broadcastInfo = require("eden-contracts/broadcast/Deploy.s.sol/5/run-latest.json");
 
 const uri = process.env.MONGO_URL;
 const dbName = process.env.MONGO_DB_NAME;
@@ -20,9 +20,7 @@ const interval = 10000; // 10 seconds
 
 
 const getLiveMintAddress = () => {
-  const broadcastInfo = fs.readFileSync(broadcast, "utf8");
-  const parsed = JSON.parse(broadcastInfo);
-  const deployments = parsed.transactions.filter(
+  const deployments = broadcastInfo.transactions.filter(
     (tx) => tx.transactionType === "CREATE"
   );
   return deployments[0].contractAddress;
