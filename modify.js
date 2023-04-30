@@ -5,6 +5,9 @@ require("dotenv").config();
 const fs = require("fs");
 const pinataSDK = require("@pinata/sdk");
 
+const livemintAbi = require("eden-contracts/out/EdenLivemint.sol/EdenLivemint.json");
+const broadcast = require("eden-contracts/broadcast/Deploy.s.sol/5/run-latest.json");
+
 const uri = process.env.MONGO_URL;
 const dbName = process.env.MONGO_DB_NAME;
 const collectionName = process.env.MONGO_COLLECTION_NAME;
@@ -14,7 +17,7 @@ const edenApiSecret = process.env.EDEN_API_SECRET;
 const pinataApiKey = process.env.PINATA_API_KEY;
 const pinataApiSecret = process.env.PINATA_API_SECRET;
 
-const LivemintAbi = require("../contracts/out/EdenLivemint.sol/EdenLivemint.json");
+
 
 const getLiveMintAddress = () => {
   const broadcast = "../contracts/broadcast/Deploy.s.sol/1337/run-latest.json";
@@ -37,7 +40,7 @@ const getContract = (provider) => {
   const signer = getSigner(provider);
   const Livemint = new ethers.Contract(
     livemintAddress,
-    LivemintAbi.abi,
+    livemintAbi.abi,
     signer
   );
   return Livemint;

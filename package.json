@@ -13,6 +13,7 @@
     "@pinata/sdk": "^2.1.0",
     "axios": "^1.3.5",
     "dotenv": "^16.0.3",
+    "eden-contracts": "^0.1.0",
     "eden-sdk": "^0.2.31",
     "ethers": "^6.3.0",
     "mongodb": "^5.2.0"
