@@ -11,16 +11,15 @@ const broadcast = require("eden-contracts/broadcast/Deploy.s.sol/5/run-latest.js
 const uri = process.env.MONGO_URL;
 const dbName = process.env.MONGO_DB_NAME;
 const collectionName = process.env.MONGO_COLLECTION_NAME;
-const interval = 10000; // 5 seconds
 const edenApiKey = process.env.EDEN_API_KEY;
 const edenApiSecret = process.env.EDEN_API_SECRET;
 const pinataApiKey = process.env.PINATA_API_KEY;
 const pinataApiSecret = process.env.PINATA_API_SECRET;
 
+const interval = 10000; // 10 seconds
 
 
 const getLiveMintAddress = () => {
-  const broadcast = "../contracts/broadcast/Deploy.s.sol/1337/run-latest.json";
   const broadcastInfo = fs.readFileSync(broadcast, "utf8");
   const parsed = JSON.parse(broadcastInfo);
   const deployments = parsed.transactions.filter(
