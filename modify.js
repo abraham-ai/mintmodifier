@@ -45,13 +45,10 @@ const getContract = (provider) => {
 };
 
 const modifyMetadata = async (provider, livemint, tokenId, imageUri) => {
-  console.log("modifying metadata for tokenId", tokenId);
   const tx = await livemint.setTokenURI(tokenId, imageUri, {
     gasLimit: 10000000,
   });
-  console.log("submitting tx", tx.hash);
   const receipt = await tx.wait();
-  console.log(receipt);
   if (receipt.status === 0) {
     console.log("Transaction failed:", receipt.transactionHash);
     const reason = await provider.getTransactionReceipt(receipt.transactionHash)
@@ -69,7 +66,6 @@ const modifyMetadata = async (provider, livemint, tokenId, imageUri) => {
   console.log(`tx success == ${receipt.status}`);
   return receipt.status;
 };
-
 
 const main = async () => {
   const PROVIDER_URL = process.env.PROVIDER_URL;
@@ -118,9 +114,10 @@ const main = async () => {
     const taskIds = mints.map((mintEvent) => mintEvent.taskId);
     try {
       const { tasks } = await edenClient.getTasks({ taskIds: taskIds });
-      tasks.forEach(async (task, idx) => {
+      for (task of tasks) {
+        console.log("task", task.status, task.taskId);
         if (task.status === "failed") {
-          const filter = { taskId: taskId };
+          const filter = { taskId: task.taskId };
           const update = { $set: { ack: true, edenSuccess: false } };
           const options = { upsert: true };
           await collection.updateMany(filter, update, options);
@@ -128,23 +125,19 @@ const main = async () => {
         if (task.status === "completed") {
           const creation = await edenClient.getCreation(task.creation);
           const imageUri = creation.uri;
-          const tokenId = mints[idx].tokenId;
-          
+          const tokenId = mints.find((mint) => mint.taskId === task.taskId).tokenId;
           const filename = imageUri.split('/').slice(-1)[0];
           const imageStream = await axios({
             url: imageUri,
             method: 'GET',
             responseType: 'stream'
           });
-          
           const ipfsImage = await pinata.pinFileToIPFS(imageStream.data, {
             pinataMetadata: {
               name: filename
             }
           });
-          
           const ipfsImageUri = `https://gateway.pinata.cloud/ipfs/${ipfsImage.IpfsHash}`
-
           const metadata = {
             name: "Eden Livemint",
             description: "This is an NFT from Eden Livemint",
@@ -152,10 +145,8 @@ const main = async () => {
             thumbnail: ipfsImageUri,
             external_url: "https://app.eden.art",
           };
-
           const pinataUrl = await pinata.pinJSONToIPFS(metadata);
           const metadataUri = `https://gateway.pinata.cloud/ipfs/${pinataUrl.IpfsHash}`
-
           const txSuccess = await modifyMetadata(
             provider,
             Livemint,
@@ -174,7 +165,7 @@ const main = async () => {
           };
           await collection.updateMany(filter, update, options);
         }
-      });
+      }
       return;
     } catch (error) {
       console.error("Error fetching Eden results:", error);
@@ -184,6 +175,8 @@ const main = async () => {
 
   async function fetchUnacknowledgedMintEvents() {
     try {
+      console.log("Fetching unacknowledged MintEvents...");
+
       const query = { ack: false };
       const result = await collection.find(query).toArray();
 
@@ -203,8 +196,18 @@ const main = async () => {
     }
   }
 
-  fetchUnacknowledgedMintEvents();
-  setInterval(fetchUnacknowledgedMintEvents, interval);
+  async function runCodeWithInterval() {
+    while (true) {
+      await fetchUnacknowledgedMintEvents();
+      await new Promise((resolve) => setTimeout(resolve, 2000)); // wait for 1 second
+    }
+  }
+  
+  await runCodeWithInterval();
+  
+  // fetchUnacknowledgedMintEvents();
+  // setInterval(fetchUnacknowledgedMintEvents, interval);
+
 };
 
 main();
