@@ -63,7 +63,7 @@ const modifyMetadata = async (provider, livemint, tokenId, imageUri) => {
     console.log("Reason:", reason);
     return false;
   }
-  console.log(`tx success == ${receipt.status}`);
+  console.log(`tx success == ${receipt.status}, ${tx.hash}`);
   return receipt.status;
 };
 
@@ -137,7 +137,9 @@ const main = async () => {
               name: filename
             }
           });
+          console.log("upload", ipfsImage)
           const ipfsImageUri = `https://gateway.pinata.cloud/ipfs/${ipfsImage.IpfsHash}`
+          console.log("ipfsImageUri", ipfsImageUri);
           const metadata = {
             name: "Eden Livemint",
             description: "This is an NFT from Eden Livemint",
@@ -145,6 +147,7 @@ const main = async () => {
             thumbnail: ipfsImageUri,
             external_url: "https://app.eden.art",
           };
+          console.log("METADATA", metadata)
           const pinataUrl = await pinata.pinJSONToIPFS(metadata);
           const metadataUri = `https://gateway.pinata.cloud/ipfs/${pinataUrl.IpfsHash}`
           const txSuccess = await modifyMetadata(
