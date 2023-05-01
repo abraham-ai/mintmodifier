@@ -34,6 +34,7 @@ const getSigner = (provider) => {
 
 const getContract = (provider) => {
   const livemintAddress = getLiveMintAddress();
+  console.log("livemintAddress", livemintAddress);
   const signer = getSigner(provider);
   const Livemint = new ethers.Contract(
     livemintAddress,
@@ -43,7 +44,7 @@ const getContract = (provider) => {
   return Livemint;
 };
 
-const modifyMetadata = async (livemint, tokenId, imageUri) => {
+const modifyMetadata = async (provider, livemint, tokenId, imageUri) => {
   console.log("modifying metadata for tokenId", tokenId);
   const tx = await livemint.setTokenURI(tokenId, imageUri, {
     gasLimit: 10000000,
@@ -51,20 +52,20 @@ const modifyMetadata = async (livemint, tokenId, imageUri) => {
   console.log("submitting tx", tx.hash);
   const receipt = await tx.wait();
   console.log(receipt);
-  // if (receipt.status === 0) {
-  //   console.log("Transaction failed:", receipt.transactionHash);
-  //   const reason = await provider.getTransactionReceipt(receipt.transactionHash)
-  //     .then((txReceipt) => {
-  //       const logs = livemint.interface.parseLog(txReceipt.logs[0]);
-  //       return logs.args[1];
-  //     })
-  //     .catch((err) => {
-  //       console.error("Error getting transaction receipt:", err);
-  //       return "Unknown reason";
-  //     });
-  //   console.log("Reason:", reason);
-  //   return false;
-  // }
+  if (receipt.status === 0) {
+    console.log("Transaction failed:", receipt.transactionHash);
+    const reason = await provider.getTransactionReceipt(receipt.transactionHash)
+      .then((txReceipt) => {
+        const logs = livemint.interface.parseLog(txReceipt.logs[0]);
+        return logs.args[1];
+      })
+      .catch((err) => {
+        console.error("Error getting transaction receipt:", err);
+        return "Unknown reason";
+      });
+    console.log("Reason:", reason);
+    return false;
+  }
   console.log(`tx success == ${receipt.status}`);
   return receipt.status;
 };
@@ -156,6 +157,7 @@ const main = async () => {
           const metadataUri = `https://gateway.pinata.cloud/ipfs/${pinataUrl.IpfsHash}`
 
           const txSuccess = await modifyMetadata(
+            provider,
             Livemint,
             tokenId,
             metadataUri
