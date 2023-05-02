@@ -16,8 +16,6 @@ const edenApiSecret = process.env.EDEN_API_SECRET;
 const pinataApiKey = process.env.PINATA_API_KEY;
 const pinataApiSecret = process.env.PINATA_API_SECRET;
 
-const interval = 10000; // 10 seconds
-
 
 const getLiveMintAddress = () => {
   const deployments = broadcastInfo.transactions.filter(
@@ -84,18 +82,6 @@ const main = async () => {
 
   const pinata = new pinataSDK(pinataApiKey, pinataApiSecret);
 
-  const pinToPinata = async (imageUri) => {
-    const metadata = {
-      name: "Eden Livemint",
-      description: "This is an NFT from Eden Livemint",
-      image: imageUri,
-      thumbnail: imageUri,
-      external_url: "https://app.eden.art",
-    };
-    const pinataUrl = await pinata.pinJSONToIPFS(metadata);
-    return `https://gateway.pinata.cloud/ipfs/${pinataUrl.IpfsHash}`;
-  };
-
   const txUpdate = async (taskId, txSuccess, imageUri) => {
     const filter = { taskId: taskId };
     const update = {
@@ -140,12 +126,13 @@ const main = async () => {
           console.log("upload", ipfsImage)
           const ipfsImageUri = `https://gateway.pinata.cloud/ipfs/${ipfsImage.IpfsHash}`
           console.log("ipfsImageUri", ipfsImageUri);
+          console.log(creation);
           const metadata = {
             name: "Eden Livemint",
-            description: "This is an NFT from Eden Livemint",
+            description: `${creation.name}`,
             image: ipfsImageUri,
             thumbnail: ipfsImageUri,
-            external_url: "https://app.eden.art",
+            external_url: `https://garden.eden.art/creation/${creation._id}`,
           };
           console.log("METADATA", metadata)
           const pinataUrl = await pinata.pinJSONToIPFS(metadata);
@@ -163,6 +150,8 @@ const main = async () => {
               ack: true,
               edenSuccess: true,
               imageUri: imageUri,
+              ipfsUri: ipfsImageUri,
+              ipfsImageUri: ipfsImageUri,
               txSuccess,
             },
           };
@@ -207,9 +196,6 @@ const main = async () => {
   }
   
   await runCodeWithInterval();
-  
-  // fetchUnacknowledgedMintEvents();
-  // setInterval(fetchUnacknowledgedMintEvents, interval);
 
 };
 
